@@ -30,6 +30,10 @@ static const int yoffset[] = {
     -200,-199,-199,-199,-199,-199,-199,-199,-199,-199,-199,-199,-198,-198,-198,-198,-198,-197,-197,-197,-196,-196,-196,-195,-195,-195,-194,-194,-194,-193,-193,-192,-192,-191,-191,-190,-190,-189,-189,-188,-187,-187,-186,-186,-185,-184,-184,-183,-182,-181,-181,-180,-179,-178,-178,-177,-176,-175,-174,-174,-173,-172,-171,-170,-169,-168,-167,-166,-165,-164,-163,-162,-161,-160,-159,-158,-157,-156,-155,-154,-153,-152,-150,-149,-148,-147,-146,-145,-143,-142,-141,-140,-138,-137,-136,-135,-133,-132,-131,-129,-128,-127,-125,-124,-123,-121,-120,-118,-117,-116,-114,-113,-111,-110,-108,-107,-105,-104,-103,-101,-100,-98,-96,-95,-93,-92,-90,-89,-87,-86,-84,-82,-81,-79,-78,-76,-74,-73,-71,-70,-68,-66,-65,-63,-61,-60,-58,-56,-55,-53,-51,-50,-48,-46,-44,-43,-41,-39,-38,-36,-34,-33,-31,-29,-27,-26,-24,-22,-20,-19,-17,-15,-13,-12,-10,-8,-6,-5,-3,-1,0,1,3,5,6,8,10,12,13,15,17,19,20,22,24,26,27,29,31,33,34,36,38,39,41,43,44,46,48,50,51,53,55,56,58,60,61,63,65,66,68,70,71,73,74,76,78,79,81,82,84,86,87,89,90,92,93,95,96,98,99,101,103,104,105,107,108,110,111,113,114,116,117,118,120,121,123,124,125,127,128,129,131,132,133,135,136,137,138,140,141,142,143,145,146,147,148,149,150,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,174,175,176,177,178,178,179,180,181,181,182,183,184,184,185,186,186,187,187,188,189,189,190,190,191,191,192,192,193,193,194,194,194,195,195,195,196,196,196,197,197,197,198,198,198,198,198,199,199,199,199,199,199,199,199,199,199,199,200,199,199,199,199,199,199,199,199,199,199,199,198,198,198,198,198,197,197,197,196,196,196,195,195,195,194,194,194,193,193,192,192,191,191,190,190,189,189,188,187,187,186,186,185,184,184,183,182,181,181,180,179,178,178,177,176,175,174,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,150,149,148,147,146,145,143,142,141,140,138,137,136,135,133,132,131,129,128,127,125,124,123,121,120,118,117,116,114,113,111,110,108,107,105,104,103,101,100,98,96,95,93,92,90,89,87,86,84,82,81,79,78,76,74,73,71,70,68,66,65,63,61,60,58,56,55,53,51,50,48,46,44,43,41,39,38,36,34,33,31,29,27,26,24,22,20,19,17,15,13,12,10,8,6,5,3,1,0,-1,-3,-5,-6,-8,-10,-12,-13,-15,-17,-19,-20,-22,-24,-26,-27,-29,-31,-33,-34,-36,-38,-39,-41,-43,-44,-46,-48,-50,-51,-53,-55,-56,-58,-60,-61,-63,-65,-66,-68,-70,-71,-73,-74,-76,-78,-79,-81,-82,-84,-86,-87,-89,-90,-92,-93,-95,-96,-98,-100,-101,-103,-104,-105,-107,-108,-110,-111,-113,-114,-116,-117,-118,-120,-121,-123,-124,-125,-127,-128,-129,-131,-132,-133,-135,-136,-137,-138,-140,-141,-142,-143,-145,-146,-147,-148,-149,-150,-152,-153,-154,-155,-156,-157,-158,-159,-160,-161,-162,-163,-164,-165,-166,-167,-168,-169,-170,-171,-172,-173,-174,-174,-175,-176,-177,-178,-178,-179,-180,-181,-181,-182,-183,-184,-184,-185,-186,-186,-187,-187,-188,-189,-189,-190,-190,-191,-191,-192,-192,-193,-193,-194,-194,-194,-195,-195,-195,-196,-196,-196,-197,-197,-197,-198,-198,-198,-198,-198,-199,-199,-199,-199,-199,-199,-199,-199,-199,-199,-199,
 };
 
+// Find the coordinates at a certain position relative to the
+// center of the watch (hrpos is 0...720)
+#define POINTAT(hrpos) (GPoint){ .x = center.x + xoffset[hrpos], .y = center.y + yoffset[hrpos] }
+
 /*
  * Main watchface drawing function.
  */
@@ -50,7 +54,7 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     // a full circle. In other words, hrpos is the number of minutes
     // since 00:00 (AM) or 12:00 (PM).
     const int hrpos = DEVELOP
-        ? (t->tm_sec * 12) % (720/2)
+        ? t->tm_sec * 12
         : (t->tm_hour % 12) * 60 + t->tm_min;
 
     // Log output for emulator
@@ -63,28 +67,24 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     );
 
     // So do it
+    GPath *path;
     if (hrpos < 720 / 4) {
         // 0:00 to 3:00 (top right quadrant)
         graphics_context_set_fill_color(ctx,bkcolor);
         graphics_fill_rect(ctx,bounds,0,GCornerNone);
 
+        graphics_context_set_fill_color(ctx,piecolor);
         GPathInfo pi = {
             .num_points = 3,
             .points = (GPoint []) {
                 center,
                 { center.x, -RADIUS },
-                (GPoint){
-                    .x = center.x + xoffset[hrpos],
-                    .y = center.y + yoffset[hrpos]
-                }
+                POINTAT(hrpos)
             }
         };
-        graphics_context_set_fill_color(ctx,piecolor);
-        GPath *const path = gpath_create(&pi);
-        gpath_draw_filled(ctx, path);
-        gpath_destroy(path);
+        path = gpath_create(&pi);
     } else if (hrpos < 720 / 2) {
-        // 3:00 to 6:00 (button right quadrant)
+        // 3:00 to 6:00 (buttom right quadrant)
         graphics_context_set_fill_color(ctx,bkcolor);
         graphics_fill_rect(ctx,bounds,0,GCornerNone);
         graphics_context_set_fill_color(ctx,piecolor);
@@ -92,23 +92,60 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
             .origin = { center.x, 0 },
             .size = { bounds.size.w/2, bounds.size.h/2 }
         },0,GCornerNone);
-        
+
+        graphics_context_set_fill_color(ctx,piecolor);
         GPathInfo pi = {
             .num_points = 3,
             .points = (GPoint []) {
                 center,
-                { center.x+RADIUS, center.y },
-                (GPoint){
-                    .x = center.x + xoffset[hrpos],
-                    .y = center.y + yoffset[hrpos]
-                }
+                { center.x + RADIUS, center.y },
+                POINTAT(hrpos)
             }
         };
+        path = gpath_create(&pi);
+    } else if (hrpos < 720 * 3/4) {
+        // 6:00 to 9:00 (buttom left quadrant)
+        graphics_context_set_fill_color(ctx,bkcolor);
+        graphics_fill_rect(ctx,(GRect){
+            .origin = { 0, 0 },
+            .size = { bounds.size.w/2, bounds.size.h }
+        },0,GCornerNone);
         graphics_context_set_fill_color(ctx,piecolor);
-        GPath *const path = gpath_create(&pi);
-        gpath_draw_filled(ctx, path);
-        gpath_destroy(path);
+        graphics_fill_rect(ctx,(GRect){
+            .origin = { center.x, 0 },
+            .size = { bounds.size.w/2, bounds.size.h }
+        },0,GCornerNone);
+
+        graphics_context_set_fill_color(ctx,piecolor);
+        GPathInfo pi = {
+            .num_points = 3,
+            .points = (GPoint []) {
+                center,
+                { center.x, center.y + RADIUS },
+                POINTAT(hrpos)
+            }
+        };
+        path = gpath_create(&pi);
+    } else {
+        // 9:00 to 12:00 (top left quadrant)
+        graphics_context_set_fill_color(ctx,piecolor);
+        graphics_fill_rect(ctx,bounds,0,GCornerNone);
+
+        graphics_context_set_fill_color(ctx,bkcolor);
+        GPathInfo pi = {
+            .num_points = 3,
+            .points = (GPoint []) {
+                center,
+                { center.x, center.y - RADIUS },
+                POINTAT(hrpos)
+            }
+        };
+        path = gpath_create(&pi);
     }
+
+    // Draw the final segment
+    gpath_draw_filled(ctx, path);
+    gpath_destroy(path);
 }
 
 /*
