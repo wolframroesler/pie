@@ -147,6 +147,18 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     gpath_draw_filled(ctx, path);
     gpath_destroy(path);
 
+    // Make sure the pie segment always goes all the way down to
+    // the center of the watchface, even when it's very narrow
+    if (hrpos != 0 && hrpos < 40) {
+        graphics_context_set_stroke_color(ctx,piecolor);
+        graphics_draw_line(ctx,center,(GPoint){ .x = center.x, .y = 0 });
+    } else if (hrpos > 680) {
+        graphics_context_set_stroke_color(ctx,bkcolor);
+        graphics_draw_line(ctx,
+            (GPoint){ .x = center.x-1, .y = center.y },
+            (GPoint){ .x = center.x-1, .y = 0 });
+    }
+
     // Now draw the minute hand
     graphics_context_set_stroke_color(ctx,GColorWhite);
     graphics_context_set_stroke_width(ctx,11);
