@@ -15,7 +15,7 @@ static Layer *s_watch_layer = NULL;
 // 0=production mode, 1=developer mode.
 // In developer mode, the pie segments display the second
 // instead of the hour to allow easier debugging.
-#define DEVELOP 1
+#define DEVELOP 0
 
 // The circle constant
 #define TAU 6.28318530718
@@ -143,9 +143,14 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
         path = gpath_create(&pi);
     }
 
-    // Draw the final segment
+    // Draw the final segment of the background
     gpath_draw_filled(ctx, path);
     gpath_destroy(path);
+
+    // Now draw the minute hand
+    graphics_context_set_stroke_color(ctx,GColorWhite);
+    graphics_context_set_stroke_width(ctx,11);
+    graphics_draw_line(ctx,center,POINTAT(t->tm_min*12));
 }
 
 /*
