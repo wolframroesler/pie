@@ -32,15 +32,16 @@ static const int yoffset[] = {
 #define POINTAT(hrpos) (GPoint){ .x = center.x + xoffset[hrpos], .y = center.y + yoffset[hrpos] }
 
 // Configuration properties
-static struct {
-    GColor AMColor;
-    GColor PMColor;
-    GColor MinuteHandColor;
-    int MinuteHandWidth;
-} settings;
+static GColor AMColor;
+static GColor PMColor;
+static GColor MinuteHandColor;
+static int MinuteHandWidth;
 
-// Persistent storage key
-#define SETTINGS_KEY 1
+// Persistent storage keys
+#define KEY_AMCOLOR 1
+#define KEY_PMCOLOR 2
+#define KEY_MINUTEHANDCOLOR 3
+#define KEY_MINUTEHANDWIDTH 4
 
 /*
  * Main watchface drawing function.
@@ -55,8 +56,8 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     // Background, part 1: From 0:00 to current hour.
     // The color is blue for day (AM, 0:00-11:59) and
     // red for night (PM, 12:00-23:59).
-    GColor const piecolor = t->tm_hour < 12 ? settings.AMColor : settings.PMColor;
-    GColor const bkcolor  = t->tm_hour < 12 ? settings.PMColor  : settings.AMColor;
+    GColor const piecolor = t->tm_hour < 12 ? AMColor : PMColor;
+    GColor const bkcolor  = t->tm_hour < 12 ? PMColor  : AMColor;
 
     // Find out where the hour hand is, in half-degrees (0-720) of
     // a full circle. In other words, hrpos is the number of minutes
@@ -168,8 +169,8 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     }
 
     // Now draw the minute hand
-    graphics_context_set_stroke_color(ctx,settings.MinuteHandColor);
-    graphics_context_set_stroke_width(ctx,settings.MinuteHandWidth);
+    graphics_context_set_stroke_color(ctx,MinuteHandColor);
+    graphics_context_set_stroke_width(ctx,MinuteHandWidth);
     graphics_draw_line(ctx,center,POINTAT(t->tm_min*12));
 }
 
@@ -189,28 +190,29 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     APP_LOG(APP_LOG_LEVEL_INFO,"Processing changed settings");
 
     if ((t=dict_find(iter, MESSAGE_KEY_AMColor))!=NULL) {
-        settings.AMColor = GColorFromHEX(t->value->int32);
+        AMColor = GColorFromHEX(t->value->int32);
+        persist_write_data(KEY_AMCOLOR, &AMColor, sizeof(AMColor));
     }
 
     if ((t=dict_find(iter, MESSAGE_KEY_PMColor))!=NULL) {
-        settings.PMColor = GColorFromHEX(t->value->int32);
+        PMColor = GColorFromHEX(t->value->int32);
+        persist_write_data(KEY_PMCOLOR, &PMColor, sizeof(PMColor));
     }
 
     if ((t=dict_find(iter, MESSAGE_KEY_MinuteHandColor))!=NULL) {
-        settings.MinuteHandColor = GColorFromHEX(t->value->int32);
+        MinuteHandColor = GColorFromHEX(t->value->int32);
+        persist_write_data(KEY_MINUTEHANDCOLOR, &MinuteHandColor, sizeof(MinuteHandColor));
     }
 
     if ((t=dict_find(iter, MESSAGE_KEY_MinuteHandWidth))!=NULL) {
-        settings.MinuteHandWidth = t->value->int32;
+        MinuteHandWidth = t->value->int32;
+        persist_write_data(KEY_MINUTEHANDWIDTH, &MinuteHandWidth, sizeof(MinuteHandWidth));
     }
 
     // Redraw the watch face
     if (s_watch_layer) {
         layer_mark_dirty(s_watch_layer);
     }
-
-    // Save settings to NVRAM
-    persist_write_data(SETTINGS_KEY, &settings, sizeof(settings));
 }
 
 static void main_window_load(Window *window) {
@@ -232,13 +234,18 @@ static void main_window_unload(Window *window) {
 
 static void init() {
 
-    // Read persistent settings
-    if (persist_read_data(SETTINGS_KEY, &settings, sizeof(settings)) != sizeof(settings)) {
-        // No persistent settings, set defaults
-        settings.AMColor = GColorBlue;
-        settings.PMColor = GColorRed;
-        settings.MinuteHandColor = GColorWhite;
-        settings.MinuteHandWidth = 11;
+    // Read persistent settings and set defaults if required
+    if (persist_read_data(KEY_AMCOLOR, &AMColor, sizeof(AMColor)) != sizeof(AMColor)) {
+        AMColor = GColorBlue;
+    }
+    if (persist_read_data(KEY_PMCOLOR, &PMColor, sizeof(PMColor)) != sizeof(PMColor)) {
+        PMColor = GColorRed;
+    }
+    if (persist_read_data(KEY_MINUTEHANDCOLOR, &MinuteHandColor, sizeof(MinuteHandColor)) != sizeof(MinuteHandColor)) {
+        MinuteHandColor = GColorWhite;
+    }
+    if (persist_read_data(KEY_MINUTEHANDWIDTH, &MinuteHandWidth, sizeof(MinuteHandWidth)) != sizeof(MinuteHandWidth)) {
+        MinuteHandWidth = 11;
     }
 
     // Create main Window element and assign to pointer
@@ -246,8 +253,8 @@ static void init() {
 
     // Set handlers to manage the elements inside the Window
     window_set_window_handlers(s_main_window, (WindowHandlers) {
-    .load = main_window_load,
-    .unload = main_window_unload
+        .load = main_window_load,
+        .unload = main_window_unload
     });
 
     // Show the Window on the watch, with animated=true
