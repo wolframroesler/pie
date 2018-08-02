@@ -2,9 +2,16 @@
   "name": "pie",
   "author": "Wolfram Rösler",
   "version": "0.1.0",
-  "keywords": ["pebble-app"],
+  "keywords": [
+    "pebble-app"
+  ],
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "pebble-clay": "^1.0.4"
+  },
+  "capabilities": [
+    "configurable"
+  ],
   "pebble": {
     "displayName": "pie",
     "uuid": "b0c1efea-3e20-4de2-ad08-59d248069a85",
@@ -20,7 +27,10 @@
       "watchface": true
     },
     "messageKeys": [
-      "dummy"
+      "AMColor",
+      "PMColor",
+      "MinuteHandColor",
+      "MinuteHandWidth"
     ],
     "resources": {
       "media": []
