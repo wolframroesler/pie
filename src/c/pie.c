@@ -17,9 +17,6 @@ static Layer *s_watch_layer = NULL;
 // instead of the hour to allow easier debugging.
 #define DEVELOP 0
 
-// The circle constant
-#define TAU 6.28318530718
-
 // Precomputed sine and cosine values for a given radius,
 // created with precompute.py
 #define RADIUS 200
@@ -34,6 +31,17 @@ static const int yoffset[] = {
 // center of the watch (hrpos is 0...720)
 #define POINTAT(hrpos) (GPoint){ .x = center.x + xoffset[hrpos], .y = center.y + yoffset[hrpos] }
 
+// Configuration properties
+static struct {
+    GColor AMColor;
+    GColor PMColor;
+    GColor MinuteHandColor;
+    int MinuteHandWidth;
+} settings;
+
+// Persistent storage key
+#define SETTINGS_KEY 1
+
 /*
  * Main watchface drawing function.
  */
@@ -47,8 +55,8 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     // Background, part 1: From 0:00 to current hour.
     // The color is blue for day (AM, 0:00-11:59) and
     // red for night (PM, 12:00-23:59).
-    GColor const piecolor = t->tm_hour < 12 ? GColorBlue : GColorRed;
-    GColor const bkcolor  = t->tm_hour < 12 ? GColorRed  : GColorBlue;
+    GColor const piecolor = t->tm_hour < 12 ? settings.AMColor : settings.PMColor;
+    GColor const bkcolor  = t->tm_hour < 12 ? settings.PMColor  : settings.AMColor;
 
     // Find out where the hour hand is, in half-degrees (0-720) of
     // a full circle. In other words, hrpos is the number of minutes
@@ -160,8 +168,8 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     }
 
     // Now draw the minute hand
-    graphics_context_set_stroke_color(ctx,GColorWhite);
-    graphics_context_set_stroke_width(ctx,11);
+    graphics_context_set_stroke_color(ctx,settings.MinuteHandColor);
+    graphics_context_set_stroke_width(ctx,settings.MinuteHandWidth);
     graphics_draw_line(ctx,center,POINTAT(t->tm_min*12));
 }
 
@@ -170,6 +178,39 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
  */
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     layer_mark_dirty(window_get_root_layer(s_main_window));
+}
+
+/*
+ * Handle "save" clicked in settings dialog
+ */
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+    Tuple *t;
+
+    APP_LOG(APP_LOG_LEVEL_INFO,"Processing changed settings");
+
+    if ((t=dict_find(iter, MESSAGE_KEY_AMColor))!=NULL) {
+        settings.AMColor = GColorFromHEX(t->value->int32);
+    }
+
+    if ((t=dict_find(iter, MESSAGE_KEY_PMColor))!=NULL) {
+        settings.PMColor = GColorFromHEX(t->value->int32);
+    }
+
+    if ((t=dict_find(iter, MESSAGE_KEY_MinuteHandColor))!=NULL) {
+        settings.MinuteHandColor = GColorFromHEX(t->value->int32);
+    }
+
+    if ((t=dict_find(iter, MESSAGE_KEY_MinuteHandWidth))!=NULL) {
+        settings.MinuteHandWidth = t->value->int32;
+    }
+
+    // Redraw the watch face
+    if (s_watch_layer) {
+        layer_mark_dirty(s_watch_layer);
+    }
+
+    // Save settings to NVRAM
+    persist_write_data(SETTINGS_KEY, &settings, sizeof(settings));
 }
 
 static void main_window_load(Window *window) {
@@ -191,6 +232,15 @@ static void main_window_unload(Window *window) {
 
 static void init() {
 
+    // Read persistent settings
+    if (persist_read_data(SETTINGS_KEY, &settings, sizeof(settings)) != sizeof(settings)) {
+        // No persistent settings, set defaults
+        settings.AMColor = GColorBlue;
+        settings.PMColor = GColorRed;
+        settings.MinuteHandColor = GColorWhite;
+        settings.MinuteHandWidth = 11;
+    }
+
     // Create main Window element and assign to pointer
     s_main_window = window_create();
 
@@ -208,6 +258,10 @@ static void init() {
         DEVELOP ? SECOND_UNIT : MINUTE_UNIT,
         tick_handler
     );
+
+    // Open AppMessage connection
+    app_message_register_inbox_received(inbox_received_handler);
+    app_message_open(128, 128);
 }
 
 static void deinit() {
