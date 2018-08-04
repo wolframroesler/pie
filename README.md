@@ -6,6 +6,8 @@ This is is a minimalistic watchface for the Pebble smartwatch that shows the hou
 
 The background is a pie segment that goes from from 12:00 to where the hour hand of a regular watch would be. This pie segment is blue for AM (00:00-11:59) and red for PM (12:00-23:59). The minute is indicated by a white minute hand that extends from the center to the edge of the watch.
 
+## How to read the time
+
 ![Mockup showing 12:32](pics/14-41.jpg)
 
 ![Mockup showing 00:00](pics/00-00.jpg)
@@ -13,6 +15,8 @@ The background is a pie segment that goes from from 12:00 to where the hour hand
 ![Mockup showing 16-09](pics/16-09.jpg)
 ![Mockup showing 18:00](pics/18-00.jpg)
 ![Mockup showing 19:32](pics/19-32.jpg)
+
+## Configuration
 
 All colors and the width of the minute hand are configurable through the configuration dialog on your phone.
 
@@ -24,9 +28,18 @@ All colors and the width of the minute hand are configurable through the configu
 ![AM white, PM black, hand red, width 13](pics/white-black-red-13.jpg)
 ![AM dark gray, PM gray, hand light gray, width 3](pics/dgray-gray-lgray-3.jpg)
 
+## Installation
+
 To install the watchface on your Pebble, upload `pie.pbw` using the Pebble app on your smartphone, or build and install the watchface with the Pebble SDK as described on https://developer.rebble.io/developer.pebble.com/tutorials/watchface-tutorial/part1/index.html.
 
-Planned future changes:
+## Development tool
+
+* Development platform: Apple Mac Mini and Macbook Air
+* Editor: gvim
+* Pebble SDK: https://developer.rebble.io/developer.pebble.com/sdk/index.html
+* Configuration Builder: Clay (https://developer.rebble.io/developer.pebble.com/guides/user-interfaces/app-configuration/index.html)
+
+## Planned future changes
 
 * Battery low indicator.
 * Bluetooth down indicator.
