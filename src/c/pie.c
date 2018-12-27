@@ -363,13 +363,13 @@ static void init() {
         LowBattColor = GColorRed;
     }
     if (persist_read_data(KEY_LOWBATTWIDTH, &LowBattWidth, sizeof(LowBattWidth)) != sizeof(LowBattWidth)) {
-        LowBattWidth = 3;
+        LowBattWidth = 8;
     }
     if (persist_read_data(KEY_NOBTCOLOR, &NoBTColor, sizeof(NoBTColor)) != sizeof(NoBTColor)) {
         NoBTColor = GColorBlue;
     }
     if (persist_read_data(KEY_NOBTWIDTH, &NoBTWidth, sizeof(NoBTWidth)) != sizeof(NoBTWidth)) {
-        NoBTWidth = 3;
+        NoBTWidth = 8;
     }
 
     // Initialize battery charge percentage and Bluetooth connection state

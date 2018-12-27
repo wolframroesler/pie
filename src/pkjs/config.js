@@ -47,11 +47,11 @@ module.exports = [
             {
                 "type": "slider",
                 "messageKey": "LowBattWidth",
-                "defaultValue": 3,
-                "label": "Low battery indicator width [Pixels, 0=none]",
+                "defaultValue": 8,
+                "label": "Low battery indicator width [Pixels, 0=disable indicator]",
                 "min": 0,
                 "max": 32,
-                "step": 1
+                "step": 2
             },
             {
                 "type": "color",
@@ -62,11 +62,11 @@ module.exports = [
             {
                 "type": "slider",
                 "messageKey": "NoBTWidth",
-                "defaultValue": 3,
-                "label": "Bluetooth offline indicator width [Pixels, 0=none]",
+                "defaultValue": 8,
+                "label": "Bluetooth offline indicator width [Pixels, 0=disable indicator]",
                 "min": 0,
                 "max": 32,
-                "step": 1
+                "step": 2
             }
         ]
     },
