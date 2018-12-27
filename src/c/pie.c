@@ -191,10 +191,12 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
 
     // If low battery indicator is on and if charge is critical:
     if (lowBatt) {
-        // Add 2 pixels to accomodate the Pebble Round bezel
+        // Add 2 pixels to accomodate the Pebble Round bezel, plus another
+        // for rounding errors
         graphics_context_set_stroke_color(ctx,LowBattColor);
-        graphics_context_set_stroke_width(ctx,LowBattWidth+2);
+        graphics_context_set_stroke_width(ctx,LowBattWidth+3);
 
+        // Show the indicator frame around the watch face
         if (PBL_PLATFORM_TYPE_CURRENT==PlatformTypeChalk) {
             // Round
             graphics_draw_circle(ctx,center,bounds.size.w/2-2);
@@ -206,6 +208,19 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
 
     // If Bluetooth offline indicator is on and connection is lost:
     if (offline) {
+        // Add 2 pixels to accomodate the Pebble Round bezel, plus another
+        // for rounding errors
+        graphics_context_set_stroke_color(ctx,NoBTColor);
+        graphics_context_set_stroke_width(ctx,NoBTWidth+3);
+
+        // Show the indicator frame around the watch face
+        if (PBL_PLATFORM_TYPE_CURRENT==PlatformTypeChalk) {
+            // Round
+            graphics_draw_circle(ctx,center,bounds.size.w/2-2);
+        } else {
+            // Rectangular
+            graphics_draw_rect(ctx,bounds);
+        }
     }
 
     // Now draw the minute hand
