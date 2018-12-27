@@ -27,16 +27,46 @@ module.exports = [
                 "type": "color",
                 "messageKey": "MinuteHandColor",
                 "defaultValue": "0xFFFFFF",
-                "label": "Minute Hand Color"
+                "label": "Minute hand color"
             },
             {
                 "type": "slider",
                 "messageKey": "MinuteHandWidth",
                 "defaultValue": 11,
-                "label": "Minute Hand Width [Pixels]",
+                "label": "Minute hand width [Pixels]",
                 "min": 1,
                 "max": 33,
                 "step": 2
+            },
+            {
+                "type": "color",
+                "messageKey": "LowBattColor",
+                "defaultValue": "0xFF0000",
+                "label": "Low battery indicator color"
+            },
+            {
+                "type": "slider",
+                "messageKey": "LowBattWidth",
+                "defaultValue": 3,
+                "label": "Low battery indicator width [Pixels, 0=none]",
+                "min": 0,
+                "max": 32,
+                "step": 1
+            },
+            {
+                "type": "color",
+                "messageKey": "NoBTColor",
+                "defaultValue": "0x0000FF",
+                "label": "Bluetooth offline indicator color"
+            },
+            {
+                "type": "slider",
+                "messageKey": "NoBTWidth",
+                "defaultValue": 3,
+                "label": "Bluetooth offline indicator width [Pixels, 0=none]",
+                "min": 0,
+                "max": 32,
+                "step": 1
             }
         ]
     },

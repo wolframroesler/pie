@@ -36,12 +36,20 @@ static GColor AMColor;
 static GColor PMColor;
 static GColor MinuteHandColor;
 static int MinuteHandWidth;
+static GColor LowBattColor;
+static int LowBattWidth;
+static GColor NoBTColor;
+static int NoBTWidth;
 
 // Persistent storage keys
-#define KEY_AMCOLOR 1
-#define KEY_PMCOLOR 2
+#define KEY_AMCOLOR         1
+#define KEY_PMCOLOR         2
 #define KEY_MINUTEHANDCOLOR 3
 #define KEY_MINUTEHANDWIDTH 4
+#define KEY_LOWBATTCOLOR    5
+#define KEY_LOWBATTWIDTH    6
+#define KEY_NOBTCOLOR       7
+#define KEY_NOBTWIDTH       8
 
 /*
  * Main watchface drawing function.
@@ -209,6 +217,26 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
         persist_write_data(KEY_MINUTEHANDWIDTH, &MinuteHandWidth, sizeof(MinuteHandWidth));
     }
 
+    if ((t=dict_find(iter, MESSAGE_KEY_LowBattColor))!=NULL) {
+        LowBattColor = GColorFromHEX(t->value->int32);
+        persist_write_data(KEY_LOWBATTCOLOR, &LowBattColor, sizeof(LowBattColor));
+    }
+
+    if ((t=dict_find(iter, MESSAGE_KEY_LowBattWidth))!=NULL) {
+        LowBattWidth = t->value->int32;
+        persist_write_data(KEY_LOWBATTWIDTH, &LowBattWidth, sizeof(LowBattWidth));
+    }
+
+    if ((t=dict_find(iter, MESSAGE_KEY_NoBTColor))!=NULL) {
+        NoBTColor = GColorFromHEX(t->value->int32);
+        persist_write_data(KEY_NOBTCOLOR, &NoBTColor, sizeof(NoBTColor));
+    }
+
+    if ((t=dict_find(iter, MESSAGE_KEY_NoBTWidth))!=NULL) {
+        NoBTWidth = t->value->int32;
+        persist_write_data(KEY_NOBTWIDTH, &NoBTWidth, sizeof(NoBTWidth));
+    }
+
     // Redraw the watch face
     if (s_watch_layer) {
         layer_mark_dirty(s_watch_layer);
@@ -246,6 +274,18 @@ static void init() {
     }
     if (persist_read_data(KEY_MINUTEHANDWIDTH, &MinuteHandWidth, sizeof(MinuteHandWidth)) != sizeof(MinuteHandWidth)) {
         MinuteHandWidth = 11;
+    }
+    if (persist_read_data(KEY_LOWBATTCOLOR, &LowBattColor, sizeof(LowBattColor)) != sizeof(LowBattColor)) {
+        LowBattColor = GColorRed;
+    }
+    if (persist_read_data(KEY_LOWBATTWIDTH, &LowBattWidth, sizeof(LowBattWidth)) != sizeof(LowBattWidth)) {
+        LowBattWidth = 3;
+    }
+    if (persist_read_data(KEY_NOBTCOLOR, &NoBTColor, sizeof(NoBTColor)) != sizeof(NoBTColor)) {
+        NoBTColor = GColorBlue;
+    }
+    if (persist_read_data(KEY_NOBTWIDTH, &NoBTWidth, sizeof(NoBTWidth)) != sizeof(NoBTWidth)) {
+        NoBTWidth = 3;
     }
 
     // Create main Window element and assign to pointer

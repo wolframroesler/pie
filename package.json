@@ -30,7 +30,11 @@
       "AMColor",
       "PMColor",
       "MinuteHandColor",
-      "MinuteHandWidth"
+      "MinuteHandWidth",
+      "LowBattColor",
+      "LowBattWidth",
+      "NoBTColor",
+      "NoBTWidth"
     ],
     "resources": {
       "media": []
