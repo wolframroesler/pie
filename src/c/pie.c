@@ -51,6 +51,9 @@ static int NoBTWidth;
 #define KEY_NOBTCOLOR       7
 #define KEY_NOBTWIDTH       8
 
+// Current battery charge [%]
+static int battPct;
+
 /*
  * Main watchface drawing function.
  */
@@ -180,12 +183,32 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_stroke_color(ctx,MinuteHandColor);
     graphics_context_set_stroke_width(ctx,MinuteHandWidth);
     graphics_draw_line(ctx,center,POINTAT(t->tm_min*12));
+
+    // If low battery indicator is on and if charge is critical:
+    const bool lowBatt = LowBattWidth > 0 && battPct <= 10;
+    if (lowBatt) {
+        APP_LOG(APP_LOG_LEVEL_INFO,"[pie] Battery charge is critical");
+    } else {
+        APP_LOG(APP_LOG_LEVEL_INFO,"[pie] Battery charge is ok");
+    }
 }
 
 /*
  * Tick handler (invoked once per minute).
  */
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+    layer_mark_dirty(window_get_root_layer(s_main_window));
+}
+
+/*
+ * Battery state change handler.
+ */
+static void update_battery(BatteryChargeState cs) {
+
+    // Store charge percentage in global variable
+    battPct = cs.charge_percent;
+
+    // Re-disply the watch face
     layer_mark_dirty(window_get_root_layer(s_main_window));
 }
 
@@ -288,6 +311,9 @@ static void init() {
         NoBTWidth = 3;
     }
 
+    // Initialize battery charge percentage
+    battPct = battery_state_service_peek().charge_percent;
+
     // Create main Window element and assign to pointer
     s_main_window = window_create();
 
@@ -305,6 +331,9 @@ static void init() {
         DEVELOP ? SECOND_UNIT : MINUTE_UNIT,
         tick_handler
     );
+
+    // Register the battery state change handler
+    battery_state_service_subscribe(&update_battery);
 
     // Open AppMessage connection
     app_message_register_inbox_received(inbox_received_handler);
