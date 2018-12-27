@@ -54,6 +54,9 @@ static int NoBTWidth;
 // Current battery charge [%]
 static int battPct;
 
+// Current Bluetooth connection state (true=connected)
+static bool gotBT;
+
 /*
  * Main watchface drawing function.
  */
@@ -61,14 +64,19 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     const GRect bounds = layer_get_bounds(layer);
     GPoint center = grect_center_point(&bounds);
 
+    // Get current time
     const time_t now = time(NULL);
     const struct tm *const t = localtime(&now);
+
+    // Get battery and Bluetooth state
+    const bool lowBatt = LowBattWidth > 0 && battPct <= 10;
+    const bool offline = NoBTWidth > 0 && !gotBT;
 
     // Background, part 1: From 0:00 to current hour.
     // The color is blue for day (AM, 0:00-11:59) and
     // red for night (PM, 12:00-23:59).
     GColor const piecolor = t->tm_hour < 12 ? AMColor : PMColor;
-    GColor const bkcolor  = t->tm_hour < 12 ? PMColor  : AMColor;
+    GColor const bkcolor  = t->tm_hour < 12 ? PMColor : AMColor;
 
     // Find out where the hour hand is, in half-degrees (0-720) of
     // a full circle. In other words, hrpos is the number of minutes
@@ -79,11 +87,13 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
 
     // Log output for emulator
     APP_LOG(APP_LOG_LEVEL_INFO,
-        "[pie] Displaying %0d:%02d:%02d (hrpos %d), bounds are %dx%d-%d-%d",
+        "[pie] Displaying %0d:%02d:%02d (hrpos %d), bounds %dx%d-%d-%d, battery %s, BT %s",
         t->tm_hour,t->tm_min,t->tm_sec,
         hrpos,
         bounds.origin.x,bounds.origin.y,
-        bounds.size.w,bounds.size.h
+        bounds.size.w,bounds.size.h,
+        lowBatt ? "critical" : "OK",
+        offline ? "offline" : "online"
     );
 
     // So do it
@@ -185,11 +195,11 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
     graphics_draw_line(ctx,center,POINTAT(t->tm_min*12));
 
     // If low battery indicator is on and if charge is critical:
-    const bool lowBatt = LowBattWidth > 0 && battPct <= 10;
     if (lowBatt) {
-        APP_LOG(APP_LOG_LEVEL_INFO,"[pie] Battery charge is critical");
-    } else {
-        APP_LOG(APP_LOG_LEVEL_INFO,"[pie] Battery charge is ok");
+    }
+
+    // If Bluetooth offline indicator is on and connection is lost:
+    if (offline) {
     }
 }
 
@@ -203,10 +213,22 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 /*
  * Battery state change handler.
  */
-static void update_battery(BatteryChargeState cs) {
+static void BatteryCallback(BatteryChargeState cs) {
 
     // Store charge percentage in global variable
     battPct = cs.charge_percent;
+
+    // Re-disply the watch face
+    layer_mark_dirty(window_get_root_layer(s_main_window));
+}
+
+/*
+ * Bluetooth connection status change handler.
+ */
+static void BTCallback(bool connected) {
+
+    // Store state in global variable
+    gotBT = connected;
 
     // Re-disply the watch face
     layer_mark_dirty(window_get_root_layer(s_main_window));
@@ -311,8 +333,9 @@ static void init() {
         NoBTWidth = 3;
     }
 
-    // Initialize battery charge percentage
+    // Initialize battery charge percentage and Bluetooth connection state
     battPct = battery_state_service_peek().charge_percent;
+    gotBT = bluetooth_connection_service_peek();
 
     // Create main Window element and assign to pointer
     s_main_window = window_create();
@@ -332,8 +355,9 @@ static void init() {
         tick_handler
     );
 
-    // Register the battery state change handler
-    battery_state_service_subscribe(&update_battery);
+    // Register the battery and Bluetooth tate change handlers
+    battery_state_service_subscribe(BatteryCallback);
+    bluetooth_connection_service_subscribe(BTCallback);
 
     // Open AppMessage connection
     app_message_register_inbox_received(inbox_received_handler);
