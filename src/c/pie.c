@@ -61,7 +61,7 @@ static bool gotBT;
  * Main watchface drawing function.
  */
 static void watch_update_proc(Layer *layer, GContext *ctx) {
-    const GRect bounds = layer_get_bounds(layer);
+    GRect bounds = layer_get_bounds(layer);
     GPoint center = grect_center_point(&bounds);
 
     // Get current time
@@ -208,20 +208,33 @@ static void watch_update_proc(Layer *layer, GContext *ctx) {
 
     // If Bluetooth offline indicator is on and connection is lost:
     if (offline) {
-        // Add 2 pixels to accomodate the Pebble Round bezel, plus another
-        // for rounding errors
         graphics_context_set_stroke_color(ctx,NoBTColor);
-        graphics_context_set_stroke_width(ctx,NoBTWidth+3);
+
+        // Allow both indicators (low batt and no BT) to be shown
+        // at the same time
+        if (lowBatt) {
+            // Showing both indicators
+            bounds.origin.x += LowBattWidth;
+            bounds.origin.y += LowBattWidth;
+            bounds.size.w -= LowBattWidth * 2;
+            bounds.size.h -= LowBattWidth * 2;
+            graphics_context_set_stroke_width(ctx,NoBTWidth);
+        } else {
+            // Showing only the "no BT" indicator
+            graphics_context_set_stroke_width(ctx,NoBTWidth+3);
+        }
 
         // Show the indicator frame around the watch face
         if (PBL_PLATFORM_TYPE_CURRENT==PlatformTypeChalk) {
             // Round
-            graphics_draw_circle(ctx,center,bounds.size.w/2-2);
+            graphics_draw_circle(ctx,center,bounds.size.w/2-(lowBatt ? 4 : 2));
         } else {
             // Rectangular
             graphics_draw_rect(ctx,bounds);
         }
     }
+
+    // NOTE: Variable `bounds` may here no longer contain its original value!!!
 
     // Now draw the minute hand
     graphics_context_set_stroke_color(ctx,MinuteHandColor);
