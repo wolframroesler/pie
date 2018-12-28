@@ -17,9 +17,9 @@ The background is a pie segment that goes from from 12:00 to where the hour hand
 ![Mockup showing 18:00](pics/18-00.jpg)
 ![Mockup showing 01:42](pics/01-42.jpg)
 
-Low battery charge (< 10 %) is indicated by a red frame around the watch face. A disconnected Bluetooth connection to the phone is indicated by a blue frame.
+Low battery charge (≤ 10 %) is indicated by a red frame around the watch face. A disconnected Bluetooth connection to the phone is indicated by a blue frame.
 
-![Picture of indicator frames](pics/indicators.jpg)
+![Picture of indicator frames](pics/indicators.png)
 
 ## Configuration
 
