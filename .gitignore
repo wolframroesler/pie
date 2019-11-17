@@ -1,5 +1,5 @@
 build
 node_modules
-.lock-waf_darwin_build
+.lock-waf_*
 .DS_Store
 *.swp
