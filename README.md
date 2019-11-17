@@ -35,7 +35,9 @@ All colors and the widths of the minute hand, the low battery indicator, and the
 
 ## Installation
 
-To install the watchface on your Pebble, upload `pie-x.x.x.pbw` (x.x.x is the version number) using the Pebble app on your smartphone, or build and install the watchface with the Pebble SDK as described on https://developer.rebble.io/developer.pebble.com/tutorials/watchface-tutorial/part1/index.html.
+The pie watchface is available on the Rebble store: https://apps.rebble.io/en_US/application/5dc34c6bc393f52a76417112
+
+To install it manually, upload `pie-x.x.x.pbw` (x.x.x is the version number) using the Pebble app on your smartphone, or build and install the watchface with the Pebble SDK as described on https://developer.rebble.io/developer.pebble.com/tutorials/watchface-tutorial/part1/index.html.
 
 ## Development tools
 
@@ -53,7 +55,6 @@ To install the watchface on your Pebble, upload `pie-x.x.x.pbw` (x.x.x is the ve
 ## Planned future changes
 
 * Selection of predefined color schemes.
-* Upload to Rebble store.
 
 ---
 *Wolfram Rösler • wolfram@roesler-ac.de • https://gitlab.com/wolframroesler • https://twitter.com/wolframroesler • https://www.linkedin.com/in/wolframroesler/*
